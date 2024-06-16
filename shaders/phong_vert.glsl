@@ -13,6 +13,8 @@ uniform mat4 viewMatrix;
 
 // !!!!!!!!!!!! TODO: cgExercise3 Add Code here !!!!!!!!!!!!!!!!!
 // Add output variables needed for illumination to fragment shader
+out vec3 normal;
+out vec3 position;
                                                                  
 void main()                                                              
 {
@@ -23,4 +25,6 @@ void main()
 	// !!!!!!!!!!!! TODO: cgExercise3 Add Code here !!!!!!!!!!!!!!!!!
     // Compute the output variables for the fragment shader
     // Note that all spatial transformations have to applied here (per vertex and not per fragment)
+    normal = mat3(transpose(inverse(modelMatrix))) * inNormal;
+    position = vec3(modelMatrix * vec4(inPosition, 1.0));
 }

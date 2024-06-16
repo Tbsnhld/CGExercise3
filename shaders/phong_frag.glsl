@@ -11,6 +11,9 @@
 
 // !!!!!!!!!!!! TODO: cgExercise3 Add Code here !!!!!!!!!!!!!!!!!
 // Add input variables needed for illumination from vertex shader
+in vec3 normal;
+in vec3 position;
+
 
 // define a struct type for object materials
 // given by color, specular color, reflection coeffs and shininess
@@ -42,7 +45,24 @@ out vec4 FragColor;
                                                                                     
 // !!!!!!!!!!!! TODO: cgExercise3 Add Code here !!!!!!!!!!!!!!!!!
 // You can add functions for Lambertian and specular illumination here 
-                                                                 
+vec3 ComputeLambertian(const in vec3 dir_to_light, const in vec3 lightColor, 
+        const in vec3 normal, const in vec3 diffuseColor) {
+
+    float nDotL = dot(normal, dir_to_light);         
+    vec3 lambert = diffuseColor * lightColor * max (nDotL, 0.0) ; 
+    return lambert;            
+}       
+
+vec3 specularIllumination(const in vec3 dir_to_light, const in vec3 lightColor,
+        const in vec3 normal, const in vec3 spectralColor,  
+        const in float spectralExponent, const in vec3 view) {
+    vec3 reflectedDir = normalize(reflect(-dir_to_light, normal));
+    float nDotR =max(dot(view, reflectedDir), 0.0);
+    float nDotRpowerS = pow(nDotR, spectralExponent);
+    vec3 spectral = spectralColor * lightColor * nDotRpowerS;
+    return spectral;
+}                                                            
+
 void main()                                                              
 {
 	//
@@ -64,7 +84,19 @@ void main()
     //
     // Note that interpolated vertex normals have to be re-normalized after interpolation
     // in the rasterizer
-     
+
+    vec3 n = normalize(normal);
+
+
+    if (numLights > 0){
+        for(int i = 0; i < numLights; i++){
+            vec3 dir_to_light = normalize(pointLight[i].position - position.xyz);
+            myColor += ComputeLambertian(dir_to_light, pointLight[i].color, n, material.kd*material.color);
+            // Compute the specular color component for this light source nd add to total color
+            vec3 viewDir = normalize(cameraPosition - position.xyz);
+            myColor += specularIllumination(dir_to_light, pointLight[i].color, n, material.ks*material.specular_color, material.shininess, viewDir);
+        }
+    }
 
 	// needed output, this should be the last line of your shader code   
     FragColor = vec4(myColor, 1.0);
